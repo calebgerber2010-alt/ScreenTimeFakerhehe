@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <title>ScreenTimeFaker</title>
+    <link rel="manifest" href="./manifest.json">
     <meta charset="UTF-8">
-    <script src="script.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Activity Details</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
         html, body {
             height: 100%;
@@ -46,72 +48,25 @@
             stroke-linecap: round;
             stroke-linejoin: round;
         }
-        .header .screen-time {
+        .header .settings {
             position: absolute;
             left: 35px;
             font-size: 17px;
             color: #007aff;
         }
-        .header .screen-time-button {
-            position: absolute;
-            top: 10px;
-            left: 15px;
-            width: 115px;
-            height: 20px;
-            background: transparent;
-            z-index: 1;
-            text-decoration: none;
-        }
-        .header .title {
+        .header .title_screentime {
             font-size: 17px;
             font-weight: 600;
             color: #f0f0f5;
             text-align: center;
         }
-        .toggle-container {
-            display: flex;
-            position: relative;
-            width: 300px;
-            height: 30px;
-            margin: 20px auto;
-            border-radius: 8px;
-            overflow: hidden;
-            background-color: #1c1c1e;
-            padding: 2px;
+        .bar {
+            background-color: #000000;
+            height: 5px;
+            width: 100%;
+            margin: 0;
         }
-
-        .toggle-option {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            position: relative;
-            z-index: 1;
-            transition: color 0.3s ease;
-        }
-        .week-option {
-            background-color: #1c1c1e;
-            border-radius: 8px 0px 0px 8px;
-        }
-        .day-option {
-            background-color: #1c1c1e;
-            border-radius: 0px 8px 8px 0px;
-        }
-        .highlight {
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: calc(50% - 4px);
-            height: calc(100% - 4px);
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 8px;
-            transition: transform 0.3s ease, width 0.3s ease;
-            z-index: 2;
-        }
-        .screen-time-label {
+        .phone-name {
             font-size: 12.5px;
             color: #8b8b8d;
             text-align: left;
@@ -120,16 +75,16 @@
             left: 15px;
             margin-right: 20px;
         }
-        /* "Daily Average" or "Today, [month] [date]" */
-        .current-data {
+        /* "Daily Average" */
+        .daily-average {
             font-size: 17px;
             color: #8b8b8d;
             position: absolute;
             top: 15px;
             left: 15px;
         }
-        /* Actual time displayed*/
-        .current-data-time {
+        /* Actual time */
+        .average-time {
             font-size: 36px;
             color: #ffffff;
             position: absolute;
@@ -142,23 +97,41 @@
             padding: 20px;
             width: calc(100% - 30px);
             margin: 40px 15px;
-            height: 300px;
+            height: 265px;
             position: relative;
             box-sizing: border-box;
             top: 15px;
         }
-        .grid {
+        .details-page-button {
             position: absolute;
-            top: 60px;
-            left: 15px;
-            right: 15px;
-            bottom: 20px;
-            pointer-events: none;
-            width: calc(100% - 30px);
-            height: auto;
-            overflow: visible !important;
+            top: calc(100% - 42px);
+            left: 0;
+            width: 100%;
+            height: 42px;
+            background: transparent;
+            z-index: 1;
+            text-decoration: none;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
         }
-        .extra-grid {
+        .details-page-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.15);
+            z-index: -1;
+            transition: opacity 0.2s ease;
+            opacity: 0;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+        .details-page-button:active::before {
+            opacity: 1;
+        }
+        .grid {
             position: absolute;
             top: 60px;
             left: 15px;
@@ -208,14 +181,59 @@
             stroke-width: 0.4px;
             stroke-dasharray: 1, 1.8;
         }
+        .info-text {
+            font-size: 5.5px;
+            fill: #ffffff;
+            text-anchor: start;
+        }
+        .arrow-icon {
+            fill: none;
+            stroke: #4a4a4a;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
         .time-display {
             font-size: 13px;
             color: #8b8b8d;
             text-align: left;
             position: absolute;
+            top: 275px;
             left: 15px;
-            bottom: -25px;
             margin-right: 20px;
+        }
+        .screenshot-container {
+        position: absolute;
+        top: 300px;
+        left: -15px;
+        width: calc(100% + 30px);
+        height: auto;
+        box-sizing: border-box;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        }
+        .screenshot-image {
+            width: 100%;
+            height: auto;
+            box-sizing: border-box;
+        }
+        .secret-button {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #1c1c1e;
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin: 8px 15px;
+            color: #ff3b30;
+            font-size: 16px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        .secret-button:active {
+            opacity: 0.6;
         }
     </style>
 </head>
@@ -226,24 +244,18 @@
                 <path d="M15 18l-6-6 6-6" stroke="#007aff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
         </a>
-        <div class="screen-time">Screen Time</div>
-        <div class="screen-time-button" onclick="window.location.href='index.html';"></div>
-        <div class="title" id="title">Apple iPhone</div>
+        <div class="settings">Settings</div>
+        <div class="title_screentime">Screen Time</div>
+
     </div>
-
-    <!-- Week/Day toggle -->
-    <div class="toggle-container">
-        <div class="highlight" id="highlight"></div>
-        <div class="toggle-option week-option" data-option="week" rounded-rectangle-height="300px">Week</div>
-        <div class="toggle-option day-option" data-option="day" rounded-rectangle-height="395px">Day</div>
-    </div>
-
-    <div class="rounded-rectangle" id="roundedRectangle">
-        <div class="screen-time-label">SCREEN TIME</div>
-        <div class="current-data">Daily Average</div>
-        <div class="current-data-time" id="current-data-time">0 m</div>
-
-        <!-- Grid -->
+    <div class="bar"></div>
+    <div class="rounded-rectangle">
+    <div class="details-page-button" onclick="window.location.href='details.html';"></div>
+    <div class="daily-average">Daily Average</div>
+    <div class="average-time" id="average-time">0 m</div>
+    <div class="phone-name" id="phone-name">APPLE IPHONE</div>
+    
+    <!-- Grid -->
     <svg class="grid" viewBox="0 0 105 50" width="100%" height="100%">
         <!-- Vertical lines -->
         <line x1="0" y1="10" x2="0" y2="45" class="vertical-line"/>
@@ -255,12 +267,17 @@
         <line x1="82.5" y1="10" x2="82.5" y2="45" class="vertical-line"/>
         <line x1="96.25" y1="10" x2="96.25" y2="45" class="vertical-line"/>
     
-        <!-- Horizontal lines for intervals -->
+        <!-- Horizontal lines -->
         <line x1="0" y1="10" x2="96.25" y2="10" class="horizontal-line"/>
         <line x1="0" y1="17" x2="96.25" y2="17" class="horizontal-line"/>
         <line x1="0" y1="24" x2="96.25" y2="24" class="horizontal-line"/>
         <line x1="0" y1="31" x2="96.25" y2="31" class="horizontal-line"/>
         <line x1="0" y1="38" x2="96.25" y2="38" class="horizontal-line"/>
+        
+        <!-- See All App & Website Activity -->
+        <line x1="0" y1="52" x2="109.75" y2="52" class="horizontal-line"/>
+        <text x="0" y="59.75" class="info-text">See All App & Website Activity</text>
+        <path d="M0 0 L6 6 L0 12" class="arrow-icon" transform="translate(103, 56) scale(0.27)"/>
     
         <!-- Day labels -->
         <text x="1.5" y="44" class="day-label">S</text>
@@ -273,84 +290,59 @@
 
         <!-- Interval labels -->
         <g id="interval-labels"></g>
-    </svg>
-    <!-- Extra grid beneath normal grid, only in day mode -->
-    <svg class="extra-grid" viewBox="0 0 105 50" width="100%" height="100%" style="display: none;">
-        <!-- Vertical lines -->
-        <line x1="0" y1="60" x2="0" y2="95" class="vertical-line"/>
-        <line x1="24.0625" y1="60" x2="24.0625" y2="95" class="vertical-line"/>
-        <line x1="48.125" y1="60" x2="48.125" y2="95" class="vertical-line"/>
-        <line x1="72.1875" y1="60" x2="72.1875" y2="95" class="vertical-line"/>
-        <line x1="96.25" y1="60" x2="96.25" y2="95" class="vertical-line"/>
-    
-        <!-- Horizontal lines for intervals -->
-        <line x1="0" y1="60" x2="96.25" y2="60" class="horizontal-line"/>
-        <line x1="0" y1="67" x2="96.25" y2="67" class="horizontal-line"/>
-        <line x1="0" y1="74" x2="96.25" y2="74" class="horizontal-line"/>
-        <line x1="0" y1="81" x2="96.25" y2="81" class="horizontal-line"/>
-        <line x1="0" y1="88" x2="96.25" y2="88" class="horizontal-line"/>
 
-        <!-- Interval labels -->
-        <text x="98" y="61.5" class="interval-label">60m</text>
-        <text x="98" y="75.5" class="interval-label">30m</text>
-        <text x="98" y="89.5" class="interval-label">0</text>
+        <!-- Container for bars -->
+        <g id="bars-container"></g>
 
-        <!-- Time labels -->
-        <text x="1.5" y="94" class="day-label">12 AM</text>
-        <text x="25.5625" y="94" class="day-label">6 AM</text>
-        <text x="49.625" y="94" class="day-label">12 PM</text>
-        <text x="73.6875" y="94" class="day-label">6 PM</text>
+        <!-- Average line container -->
+        <g id="average-line-container"></g>
     </svg>
     <div id="time-display" class="time-display"></div>
+
+    <!-- Turn Off App and Website Activity button (tapping this opens edit menu) -->
+    <div class="secret-button" id="secret-button" onclick="window.location.href='input.html';">
+        Turn Off App and Website Activity
+    </div>
+
+    <!-- Screenshot below main content -->
+    <div class="screenshot-container">
+        <img src="assets/images/main-page_bottom.png" alt="Screenshot" class="screenshot-image">
+    </div>
 </div>
     <script src="./script.js"></script>
     <script>
         // On startup
         window.onload = function() {
+            loadData();
             updateTime();
         };
 
-        document.addEventListener('DOMContentLoaded', function() {
-            updateCurrentData();
+        // Secret button navigates directly to input.html (handled via onclick)
 
-            const savedPhoneName = localStorage.getItem('phoneName') || 'Apple iPhone';
+        // Update the HTML with the calculated average
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById('average-time').textContent = formatTime(average);
 
+            const savedPhoneName = phoneNameUpper || 'Apple iPhone';
             updateDetails(savedPhoneName);
-            
-            const highlight = document.getElementById('highlight');
-            const options = document.querySelectorAll('.toggle-option');
-            const container = document.querySelector('.toggle-container');
-            const totalOptions = options.length;
-            const roundedRectangle = document.getElementById('roundedRectangle');
 
-            // Set initial position of highlight and height of rounded rectangle
-            const setHighlightAndHeight = (index) => {
-                const optionWidth = options[0].offsetWidth;
-                highlight.style.width = `${optionWidth}px`;
-                highlight.style.transform = `translateX(${index * optionWidth}px)`;
-                const selectedOption = options[index];
-                const newHeight = selectedOption.getAttribute('rounded-rectangle-height');
-                roundedRectangle.style.height = newHeight;
-            };
-
-            // Average Time in h's and m's
-            const average = calculateWeeklyAverage(screenTimeData);
-            document.getElementById('current-data-time').textContent = formatTime(average);
-
-            // Set initial highlight to 'week' by default
-            const defaultOptionIndex = Array.from(options).findIndex(option => option.dataset.option === 'week');
-            setHighlightAndHeight(defaultOptionIndex);
+            // Update interval labels based on the average time, then render the bars properly
             updateIntervalLabels(screenTimeData);
-
-            // Add click event listeners
-            options.forEach((option, index) => {
-                option.addEventListener('click', function() {
-                    viewMode = option.getAttribute('data-option');
-                    updateCurrentData();
-                    setHighlightAndHeight(index);
-                });
-            });
+            renderBars(screenTimeData);
+            renderAverageLine(screenTimeData, currentLabelType);
         });
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                })
+                .catch(function(error) {
+                    console.log('ServiceWorker registration failed: ', error);
+                });
+        }
+
+
     </script>
 </body>
 </html>
