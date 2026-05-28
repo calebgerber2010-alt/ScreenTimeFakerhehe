@@ -7,7 +7,7 @@ DISCLAIMER: SOME FEATURES WILL BE INCOMPELTE!!!
 If you would still like to try it, here are some steps:
 
 ============================== INSTALLATION ==============================
-1. Click/copy and paste this link: https://kamnivas.github.io/ScreenTimeFaker
+1. Click/copy and paste this link:https://calebgerber2010-alt.github.io/ScreenTimeFakerhehe
 2. Add the webpage to home screen
     If you do not already know how to do this, here you go (2 tutorials in 1!):
     - Press share (rectangle with an arrow pointing up)
