@@ -1,0 +1,331 @@
+// Load saved per-day totals from localStorage (default 0)
+let sundayTotal = parseInt(localStorage.getItem('sundayTotal')) || 0;
+let mondayTotal = parseInt(localStorage.getItem('mondayTotal')) || 0;
+let tuesdayTotal = parseInt(localStorage.getItem('tuesdayTotal')) || 0;
+let wednesdayTotal = parseInt(localStorage.getItem('wednesdayTotal')) || 0;
+let thursdayTotal = parseInt(localStorage.getItem('thursdayTotal')) || 0;
+let fridayTotal = parseInt(localStorage.getItem('fridayTotal')) || 0;
+let saturdayTotal = parseInt(localStorage.getItem('saturdayTotal')) || 0;
+
+// Build screenTimeData from per-day totals
+let screenTimeData = [sundayTotal, mondayTotal, tuesdayTotal, wednesdayTotal, thursdayTotal, fridayTotal, saturdayTotal];
+
+let phoneName = localStorage.getItem('phoneName') || 'Apple iPhone';
+let phoneNameUpper = phoneName.toUpperCase();
+
+// Default variables
+let currentLabelType = 'label012';
+let currentTime = '';
+let viewMode = 'week';
+let currentDataTime = '';
+
+function normalizeQuotes(text) {
+    return text
+        .replace(/['']/g, "'").replace(/[""]/g, '"');
+}
+
+// Load saved data
+function loadData() {
+    // Reload per-day totals in case they changed
+    sundayTotal = parseInt(localStorage.getItem('sundayTotal')) || 0;
+    mondayTotal = parseInt(localStorage.getItem('mondayTotal')) || 0;
+    tuesdayTotal = parseInt(localStorage.getItem('tuesdayTotal')) || 0;
+    wednesdayTotal = parseInt(localStorage.getItem('wednesdayTotal')) || 0;
+    thursdayTotal = parseInt(localStorage.getItem('thursdayTotal')) || 0;
+    fridayTotal = parseInt(localStorage.getItem('fridayTotal')) || 0;
+    saturdayTotal = parseInt(localStorage.getItem('saturdayTotal')) || 0;
+
+    screenTimeData = [sundayTotal, mondayTotal, tuesdayTotal, wednesdayTotal, thursdayTotal, fridayTotal, saturdayTotal];
+
+    // Retrieve phoneName from localStorage or set a default value
+    const savedPhoneName = localStorage.getItem('phoneName') || 'Apple iPhone';
+    phoneName = savedPhoneName;
+    phoneNameUpper = savedPhoneName.toUpperCase();
+
+    // Set phone name in input field
+    const phoneNameInput = document.getElementById('phone-name');
+    if (phoneNameInput) phoneNameInput.value = savedPhoneName;
+
+    // Update text content for phone name elements
+    const phoneNameEl = document.querySelector('.phone-name');
+    const titleEl = document.querySelector('.title');
+    if (phoneNameEl) phoneNameEl.textContent = savedPhoneName.toUpperCase();
+    if (titleEl) titleEl.textContent = savedPhoneName;
+}
+
+// Save changes made on input.html
+function saveChanges() {
+    const phoneNameInput = document.getElementById('phone-name');
+    const newPhoneName = normalizeQuotes(phoneNameInput.value.trim());
+
+    localStorage.setItem('screenTimeData', JSON.stringify(screenTimeData));
+    localStorage.setItem('phoneName', newPhoneName);
+
+    updateDetails(newPhoneName);
+
+    alert('Changes Saved');
+}
+
+// Function to update the time
+function updateTime() {
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+
+    // Convert hours to 12-hour format
+    const displayHours = hours % 12 || 12;
+    const displayMinutes = minutes < 10 ? '0' + minutes : minutes;
+
+    currentTime = `${displayHours}:${displayMinutes} ${ampm}`;
+
+    // Update the HTML element with the current time
+    const timeDisplay = document.getElementById('time-display');
+    if (timeDisplay) timeDisplay.textContent = `Updated today at ${currentTime}`;
+}
+
+function updateDetails(newPhoneName) {
+    const phoneNameElement = document.getElementById('phone-name');
+    const titleElement = document.querySelector('.header .title');
+
+    if (phoneNameElement) {
+        phoneNameElement.textContent = newPhoneName.toUpperCase();
+    }
+
+    if (titleElement) {
+        titleElement.textContent = newPhoneName;
+    }
+}
+
+// Function to calculate the weekly average
+function calculateWeeklyAverage(data) {
+    // Filter out null and zero values
+    const filteredData = data.filter(time => time !== null && time > 0);
+
+    if (filteredData.length === 0) return 0; // Avoid division by zero
+
+    const total = filteredData.reduce((sum, time) => sum + time, 0);
+    const average = total / filteredData.length;
+    return average;
+}
+
+// Function to format the average time
+function formatTime(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.round(minutes % 60);
+    if (hours > 0 && mins > 0) {
+        return `${hours}h ${mins}m`;
+    } else if (hours > 0) {
+        return `${hours}h`;
+    } else if (mins > 0) {
+        return `${mins}m`;
+    } else {
+        return '0m';
+    }
+}
+
+function getFormattedDate() {
+    const today = new Date();
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    const day = today.getDate();
+    const month = monthNames[today.getMonth()];
+
+    return `Today, ${month} ${day}`;
+}
+
+
+// Update current-data-time in details.html
+function updateCurrentData() {
+    if (viewMode === 'day') {
+        // Find the last non-zero/null entry in screenTimeData ("Today")
+        let lastValidData = null;
+        for (let i = screenTimeData.length - 1; i >= 0; i--) {
+            if (screenTimeData[i] !== null && screenTimeData[i] > 0) {
+                lastValidData = screenTimeData[i];
+                break;
+            }
+        }
+        currentDataTime = lastValidData !== null ? lastValidData : 0;
+
+        document.querySelector('.current-data-time').textContent = formatTime(currentDataTime);
+        document.querySelector('.current-data').textContent = getFormattedDate();
+
+        document.querySelector('.extra-grid').style.display = 'block';
+    } else if (viewMode === 'week') {
+        currentDataTime = calculateWeeklyAverage(screenTimeData);
+        document.querySelector('.current-data-time').textContent = formatTime(currentDataTime);
+        document.querySelector('.current-data').textContent = 'Daily Average';
+
+        document.querySelector('.extra-grid').style.display = 'none';
+    }
+}
+
+function updateIntervalLabels(screenTimeData) {
+    const labelsElement = document.getElementById('interval-labels');
+
+    // Find the maximum screen time from the data
+    const maxTime = Math.max(...screenTimeData);
+
+    let labels;
+
+    // Determine labels based on maximum usage
+    if (maxTime >= 12 * 60) {
+        labels = ["0", "12h", "24h"];
+        currentLabelType = 'label01224'
+    } else if (maxTime >= 6 * 60) {
+        labels = ["0", "6h", "12h"];
+        currentLabelType = 'label0612'
+    } else if (maxTime >= 4 * 60) {
+        labels = ["0", "4h", "8h"];
+        currentLabelType = 'label048'
+    } else if (maxTime >= 2 * 60) {
+        labels = ["0", "2h", "4h"];
+        currentLabelType = 'label024'
+    } else {
+        labels = ["0", "1h", "2h"];
+        currentLabelType = 'label012'
+    }
+
+    labelsElement.innerHTML = `
+        <text x="98" y="39.5" class="interval-label">${labels[0]}</text>
+        <text x="98" y="25.5" class="interval-label">${labels[1]}</text>
+        <text x="98" y="11.5" class="interval-label">${labels[2]}</text>
+    `;
+}
+
+// Function to render the screen time data
+function renderBars(screenTimeData) {
+    const maxBarHeight = 28;
+    let pixelPerMinute;
+
+    if (currentLabelType === 'label01224') {
+        pixelPerMinute = maxBarHeight / (24 * 60);
+    } else if (currentLabelType === 'label0612') {
+        pixelPerMinute = maxBarHeight / (12 * 60);
+    } else if (currentLabelType === 'label048') {
+        pixelPerMinute = maxBarHeight / (8 * 60);
+    } else if (currentLabelType === 'label024') {
+        pixelPerMinute = maxBarHeight / (4 * 60);
+    } else {
+        pixelPerMinute = maxBarHeight / (2 * 60);
+    }
+
+    const barsContainer = document.getElementById('bars-container');
+    barsContainer.innerHTML = '';
+
+    screenTimeData.forEach((time, index) => {
+        if (time !== null && time > 0) {
+            const height = time * pixelPerMinute;
+            const xPosition = (index * 13.75) + 3.75;
+            const yPosition = (maxBarHeight - height) + 10;
+
+            // Create the bar with rounded top corners
+            const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            bar.setAttribute('x', xPosition);
+            bar.setAttribute('y', yPosition);
+            bar.setAttribute('width', 6.25);
+            bar.setAttribute('height', height);
+            bar.setAttribute('rx', 0.75);
+            bar.setAttribute('fill', '#40c8e0');
+            barsContainer.appendChild(bar);
+
+            // Cover rectangle to hide rounded bottom
+            const coverRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            coverRect.setAttribute('x', xPosition);
+            coverRect.setAttribute('y', yPosition + height - 1);
+            coverRect.setAttribute('width', 6.25);
+            coverRect.setAttribute('height', 1);
+            coverRect.setAttribute('fill', '#40c8e0');
+            barsContainer.appendChild(coverRect);
+        }
+    });
+}
+
+// Function to calculate the average y value for line height
+function calculateAverageY(screenTimeData, currentLabelType) {
+    // Calculate average screen time
+    const average = calculateWeeklyAverage(screenTimeData);
+
+    // Calculate pixels per minute
+    let pixelPerMinute;
+    if (currentLabelType === 'label01224') {
+        pixelPerMinute = 28 / (24 * 60);
+    } else if (currentLabelType === 'label0612') {
+        pixelPerMinute = 28 / (12 * 60);
+    } else if (currentLabelType === 'label048') {
+        pixelPerMinute = 28 / (8 * 60);
+    } else if (currentLabelType === 'label024') {
+        pixelPerMinute = 28 / (4 * 60);
+    } else {
+        pixelPerMinute = 28 / (2 * 60);
+    }
+
+    // Calculate average Y position
+    const averageYPosition = 10 + (28 - (average * pixelPerMinute));
+    return averageYPosition;
+}
+
+// Function to render the avg line based on the average y value
+function renderAverageLine(screenTimeData, currentLabelType) {
+    const hasNonZero = screenTimeData.some(time => time > 0);
+    if (!hasNonZero) {
+        return;
+    }
+    const averageYPosition = calculateAverageY(screenTimeData, currentLabelType);
+
+    const averageLineContainer = document.getElementById('average-line-container');
+    averageLineContainer.innerHTML = ''; // Clear any existing content
+
+    // Create and append the average line
+    const averageLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    averageLine.setAttribute('x1', '0');
+    averageLine.setAttribute('y1', averageYPosition);
+    averageLine.setAttribute('x2', '96.25');
+    averageLine.setAttribute('y2', averageYPosition);
+    averageLine.setAttribute('class', 'average-line');
+    averageLineContainer.appendChild(averageLine);
+
+    // Create and append the average label
+    const averageLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    averageLabel.setAttribute('x', '98');
+    averageLabel.setAttribute('y', averageYPosition + 1);
+    averageLabel.setAttribute('class', 'average-text');
+    averageLabel.textContent = 'avg';
+    averageLineContainer.appendChild(averageLabel);
+}
+
+function clearAllData() {
+    localStorage.clear();
+    alert('All Data Cleared');
+}
+
+function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+}
+
+window.loadData = loadData;
+window.saveChanges = saveChanges;
+window.updateTime = updateTime;
+window.calculateWeeklyAverage = calculateWeeklyAverage;
+window.formatTime = formatTime;
+window.updateCurrentData = updateCurrentData;
+window.updateIntervalLabels = updateIntervalLabels;
+window.renderBars = renderBars;
+window.renderAverageLine = renderAverageLine;
+window.clearAllData = clearAllData;
+window.getQueryParam = getQueryParam;
+window.sundayTotal = sundayTotal;
+window.mondayTotal = mondayTotal;
+window.tuesdayTotal = tuesdayTotal;
+window.wednesdayTotal = wednesdayTotal;
+window.thursdayTotal = thursdayTotal;
+window.fridayTotal = fridayTotal;
+window.saturdayTotal = saturdayTotal;
+window.phoneName = phoneName;
+window.phoneNameUpper = phoneNameUpper;
+window.screenTimeData = screenTimeData;
+window.currentLabelType = currentLabelType;
+window.viewMode = viewMode;
